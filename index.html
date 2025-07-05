@@ -228,6 +228,11 @@
         matchHistory = Object.values(snapshot.val() || {});
         renderGroupTables();
         renderMatchList();
+
+    window.submitResultFromList = submitResultFromList;
+    window.enableEdit = enableEdit;
+    window.submitResult = submitResult;
+        
       });
     });
   </script>
