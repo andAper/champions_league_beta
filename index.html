@@ -34,7 +34,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
+    document.addEventListener("DOMContentLoaded", async function () {
       const firebaseConfig = {
         apiKey: "AIzaSyAG1iKwP6aaQg_od9jCBfi1HkzKh_3q_Ho",
         authDomain: "champions-league-app-f96d9.firebaseapp.com",
@@ -47,6 +47,10 @@
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
 
+      // Load external match data if large
+      const matchGroupSnapshot = await db.ref("allMatchGroups").once("value");
+      const matchHistorySnapshot = await db.ref("matchHistory").once("value");
+
       const groups = {
         A: ["Manchester United", "Eintracht Frankfurt", "Villarreal", "Liverpool"],
         B: ["Inter Milan", "PSG", "Milan", "Marseille"],
@@ -56,64 +60,16 @@
         F: ["Bayer Leverkusen", "Barcelona", "Sporting", "Tottenham Hotspur"]
       };
 
-    const allMatchGroups = {
-      A: [
-        { teamA: "Eintracht Frankfurt", teamB: "Villarreal" },
-        { teamA: "Villarreal", teamB: "Liverpool" },
-        { teamA: "Manchester United", teamB: "Liverpool" },
-        { teamA: "Liverpool", teamB: "Eintracht Frankfurt" },
-        { teamA: "Villarreal", teamB: "Manchester United" },
-        { teamA: "Eintracht Frankfurt", teamB: "Manchester United" }
-      ],
-      B: [
-        { teamA: "Milan", teamB: "PSG" },
-        { teamA: "Marseille", teamB: "Milan" },
-        { teamA: "Milan", teamB: "Inter Milan" },
-        { teamA: "Inter Milan", teamB: "Marseille" },
-        { teamA: "Marseille", teamB: "PSG" },
-        { teamA: "PSG", teamB: "Inter Milan" }
-      ],
-      C: [
-        { teamA: "Atletico Bilbao", teamB: "Monaco" },
-        { teamA: "Monaco", teamB: "Newcastle United" },
-        { teamA: "Newcastle United", teamB: "Atletico Bilbao" },
-        { teamA: "Borussia Dortmund", teamB: "Monaco" },
-        { teamA: "Borussia Dortmund", teamB: "Newcastle United" },
-        { teamA: "Atletico Bilbao", teamB: "Borussia Dortmund" }
-      ],
-      D: [
-        { teamA: "Bayern Munich", teamB: "Manchester City" },
-        { teamA: "Manchester City", teamB: "Chelsea" },
-        { teamA: "Bayern Munich", teamB: "Chelsea" },
-        { teamA: "Real Madrid", teamB: "Bayern Munich" },
-        { teamA: "Real Madrid", teamB: "Chelsea" },
-        { teamA: "Manchester City", teamB: "Real Madrid" }
-      ],
-      E: [
-        { teamA: "Arsenal", teamB: "Juventus" },
-        { teamA: "Juventus", teamB: "Atletico Madrid" },
-        { teamA: "Napoli", teamB: "Atletico Madrid" },
-        { teamA: "Atletico Madrid", teamB: "Arsenal" },
-        { teamA: "Arsenal", teamB: "Napoli" },
-        { teamA: "Juventus", teamB: "Napoli" }
-      ],
-      F: [
-        { teamA: "Tottenham Hotspur", teamB: "Bayer Leverkusen" },
-        { teamA: "Sporting", teamB: "Bayer Leverkusen" },
-        { teamA: "Tottenham Hotspur", teamB: "Barcelona" },
-        { teamA: "Bayer Leverkusen", teamB: "Barcelona" },
-        { teamA: "Barcelona", teamB: "Sporting" },
-        { teamA: "Sporting", teamB: "Tottenham Hotspur" }
-      ]
-    };
+      const allMatchGroups = matchGroupSnapshot.val() || {};
+      let matchHistory = matchHistorySnapshot.val() || [];
 
-    let matchHistory = [];
+      window.db = db;
+      window.matchHistory = matchHistory;
+      window.groups = groups;
+      window.allMatchGroups = allMatchGroups;
 
-      db.ref("matchHistory").once("value").then(snapshot => {
-        matchHistory = snapshot.val() || [];
-        renderGroupTables();
-        renderMatchList();
-      });
+      renderGroupTables();
+      renderMatchList();
 
       function renderGroupTables() {
         const tablesDiv = document.getElementById("tables");
@@ -202,7 +158,7 @@
         }
       }
 
-      function enableEdit(group, teamA, teamB) {
+      window.enableEdit = function (group, teamA, teamB) {
         const idA = `gA-${group}-${teamA}-${teamB}`;
         const idB = `gB-${group}-${teamA}-${teamB}`;
         const idW = `w-${group}-${teamA}-${teamB}`;
@@ -215,7 +171,7 @@
         document.getElementById(actionId).innerHTML = `<button id="${submitId}" onclick="submitResultFromList('${group}', '${teamA}', '${teamB}', true)">Submit</button>`;
       }
 
-      function submitResultFromList(group, teamA, teamB, isEdit) {
+      window.submitResultFromList = function (group, teamA, teamB, isEdit) {
         const idA = `gA-${group}-${teamA}-${teamB}`;
         const idB = `gB-${group}-${teamA}-${teamB}`;
         const idW = `w-${group}-${teamA}-${teamB}`;
