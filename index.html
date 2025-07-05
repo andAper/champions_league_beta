@@ -29,33 +29,25 @@
     <div id="matchList"></div>
   </div>
 
-<!-- 🔌 Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
 
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const firebaseConfig = {
-      apiKey: "AIzaSyAG1iKwP6aaQg_od9jCBfi1HkzKh_3q_Ho",
-      authDomain: "champions-league-app-f96d9.firebaseapp.com",
-      databaseURL: "https://champions-league-app-f96d9-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "champions-league-app-f96d9",
-      storageBucket: "champions-league-app-f96d9.firebasestorage.app",
-      messagingSenderId: "871493693057",
-      appId: "1:871493693057:web:37b2b8aa09875742072780"
-    };
-
-    // ✅ Initialize Firebase only after DOM is ready and SDKs are loaded
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
-
-    // 👉 Now you can safely run the rest of your logic here
-    // e.g., matchHistory loading and rendering functions
-  });
-</script>
-
-  <!-- ⚽ Your App Logic -->
   <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const firebaseConfig = {
+        apiKey: "AIzaSyAG1iKwP6aaQg_od9jCBfi1HkzKh_3q_Ho",
+        authDomain: "champions-league-app-f96d9.firebaseapp.com",
+        databaseURL: "https://champions-league-app-f96d9-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "champions-league-app-f96d9",
+        storageBucket: "champions-league-app-f96d9.appspot.com",
+        messagingSenderId: "871493693057",
+        appId: "1:871493693057:web:37b2b8aa09875742072780"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.database();
+      
     const groups = {
       A: ["Manchester United", "Eintracht Frankfurt", "Villarreal", "Liverpool"],
       B: ["Inter Milan", "PSG", "Milan", "Marseille"],
