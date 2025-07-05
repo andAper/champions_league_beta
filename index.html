@@ -5,7 +5,7 @@
   <title>FIFA 25 - Champions League Table</title>
   <style>
     h1 { text-align: center; font-weight: bold; font-size: 42px; }
-    h2 { text-align: center; margin-top: 60px;}
+    h2 { text-align: center; margin-top: 60px; }
     h3 { font-weight: bold; font-size: 24px; }
     body { font-family: Arial; background: #f0f0f0; padding: 20px; }
     table { border-collapse: collapse; margin-bottom: 20px; width: 100%; table-layout: fixed; }
@@ -29,7 +29,7 @@
     <div id="matchList"></div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-database-compat.js"></script>
 
@@ -44,18 +44,17 @@
         messagingSenderId: "871493693057",
         appId: "1:871493693057:web:37b2b8aa09875742072780"
       };
-
       firebase.initializeApp(firebaseConfig);
       const db = firebase.database();
-      
-    const groups = {
-      A: ["Manchester United", "Eintracht Frankfurt", "Villarreal", "Liverpool"],
-      B: ["Inter Milan", "PSG", "Milan", "Marseille"],
-      C: ["Newcastle United", "Monaco", "Atletico Bilbao", "Borussia Dortmund"],
-      D: ["Manchester City", "Chelsea", "Bayern Munich", "Real Madrid"],
-      E: ["Atletico Madrid", "Arsenal", "Juventus", "Napoli"],
-      F: ["Bayer Leverkusen", "Barcelona", "Sporting", "Tottenham Hotspur"]
-    };
+
+      const groups = {
+        A: ["Manchester United", "Eintracht Frankfurt", "Villarreal", "Liverpool"],
+        B: ["Inter Milan", "PSG", "Milan", "Marseille"],
+        C: ["Newcastle United", "Monaco", "Atletico Bilbao", "Borussia Dortmund"],
+        D: ["Manchester City", "Chelsea", "Bayern Munich", "Real Madrid"],
+        E: ["Atletico Madrid", "Arsenal", "Juventus", "Napoli"],
+        F: ["Bayer Leverkusen", "Barcelona", "Sporting", "Tottenham Hotspur"]
+      };
 
     const allMatchGroups = {
       A: [
@@ -110,127 +109,127 @@
 
     let matchHistory = [];
 
-    firebase.database().ref("matchHistory").once("value").then(snapshot => {
-      matchHistory = snapshot.val() || [];
-      renderGroupTables();
-      renderMatchList();
-    });
-
-    function renderGroupTables() {
-      const tablesDiv = document.getElementById("tables");
-      tablesDiv.innerHTML = "";
-
-      for (let group in groups) {
-        const teams = groups[group];
-        const standings = {};
-        teams.forEach(t => standings[t] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 });
-
-        matchHistory.filter(m => m.group === group).forEach(({ teamA, teamB, goalsA, goalsB }) => {
-          let a = standings[teamA];
-          let b = standings[teamB];
-          a.played++; b.played++;
-          a.gf += goalsA; a.ga += goalsB;
-          b.gf += goalsB; b.ga += goalsA;
-          a.gd = a.gf - a.ga;
-          b.gd = b.gf - b.ga;
-          if (goalsA > goalsB) { a.won++; b.lost++; a.points += 3; }
-          else if (goalsA < goalsB) { b.won++; a.lost++; b.points += 3; }
-          else { a.drawn++; b.drawn++; a.points++; b.points++; }
-        });
-
-        const sorted = Object.entries(standings).sort((a, b) => b[1].points - a[1].points || b[1].gd - a[1].gd || b[1].gf - a[1].gf);
-        let html = `<h2>Group ${group}</h2><table><tr><th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>`;
-        sorted.forEach(([team, stat], i) => {
-          let cls = i === 0 ? "top1" : i === 1 ? "top2" : i === 2 ? "third" : "";
-          html += `<tr class='${cls}'><td>${team}</td><td>${stat.played}</td><td>${stat.won}</td><td>${stat.drawn}</td><td>${stat.lost}</td><td>${stat.gf}</td><td>${stat.ga}</td><td>${stat.gd}</td><td>${stat.points}</td></tr>`;
-        });
-        html += `</table>`;
-        tablesDiv.innerHTML += html;
-      }
-    }
-
-    function renderMatchList() {
-      const matchList = document.getElementById("matchList");
-      matchList.innerHTML = "";
-
-      for (let group in allMatchGroups) {
-        const wrapper = document.createElement("div");
-        wrapper.innerHTML = `<h3>Group ${group}</h3>`;
-        const table = document.createElement("table");
-        table.innerHTML = `<tr><th>Match</th><th>Score</th><th>Winner</th><th>Action</th></tr>`;
-
-        allMatchGroups[group].forEach(match => {
-          const existing = matchHistory.find(m => m.group === group && ((m.teamA === match.teamA && m.teamB === match.teamB) || (m.teamA === match.teamB && m.teamB === match.teamA)));
-          const row = document.createElement("tr");
-          const idA = `gA-${group}-${match.teamA}-${match.teamB}`;
-          const idB = `gB-${group}-${match.teamA}-${match.teamB}`;
-          const idW = `w-${group}-${match.teamA}-${match.teamB}`;
-          const submitId = `submit-${group}-${match.teamA}-${match.teamB}`;
-          const actionId = `action-${group}-${match.teamA}-${match.teamB}`;
-
-          if (existing) {
-            row.innerHTML = `
-              <td>${match.teamA} vs ${match.teamB}</td>
-              <td><input id="${idA}" type="number" value="${existing.goalsA}" min="0" readonly> - <input id="${idB}" type="number" value="${existing.goalsB}" min="0" readonly></td>
-              <td>
-                <select id="${idW}" disabled>
-                  <option value="And" ${existing.winner === 'And' ? 'selected' : ''}>And</option>
-                  <option value="Leo" ${existing.winner === 'Leo' ? 'selected' : ''}>Leo</option>
-                </select>
-              </td>
-              <td id="${actionId}">
-                ✔️ <button onclick="enableEdit('${group}', '${match.teamA}', '${match.teamB}')">✏️</button>
-                <button id="${submitId}" style="display:none" onclick="submitResultFromList('${group}', '${match.teamA}', '${match.teamB}', true)">Submit</button>
-              </td>
-            `;
-          } else {
-            row.innerHTML = `
-              <td>${match.teamA} vs ${match.teamB}</td>
-              <td><input id="${idA}" type="number" min="0"> - <input id="${idB}" type="number" min="0"></td>
-              <td>
-                <select id="${idW}">
-                  <option value="And">And</option>
-                  <option value="Leo">Leo</option>
-                </select>
-              </td>
-              <td><button onclick="submitResultFromList('${group}', '${match.teamA}', '${match.teamB}', false)">Submit</button></td>
-            `;
-          }
-          table.appendChild(row);
-        });
-        wrapper.appendChild(table);
-        matchList.appendChild(wrapper);
-      }
-    }
-
-    function enableEdit(group, teamA, teamB) {
-      const idA = `gA-${group}-${teamA}-${teamB}`;
-      const idB = `gB-${group}-${teamA}-${teamB}`;
-      const idW = `w-${group}-${teamA}-${teamB}`;
-      const submitId = `submit-${group}-${teamA}-${teamB}`;
-      const actionId = `action-${group}-${teamA}-${teamB}`;
-
-      document.getElementById(idA).removeAttribute("readonly");
-      document.getElementById(idB).removeAttribute("readonly");
-      document.getElementById(idW).disabled = false;
-      document.getElementById(actionId).innerHTML = `<button id="${submitId}" onclick="submitResultFromList('${group}', '${teamA}', '${teamB}', true)">Submit</button>`;
-    }
-
-    function submitResultFromList(group, teamA, teamB, isEdit) {
-      const idA = `gA-${group}-${teamA}-${teamB}`;
-      const idB = `gB-${group}-${teamA}-${teamB}`;
-      const idW = `w-${group}-${teamA}-${teamB}`;
-      const goalsA = parseInt(document.getElementById(idA).value);
-      const goalsB = parseInt(document.getElementById(idB).value);
-      const winner = document.getElementById(idW).value;
-      if (!isNaN(goalsA) && !isNaN(goalsB)) {
-        matchHistory = matchHistory.filter(m => !(m.group === group && ((m.teamA === teamA && m.teamB === teamB) || (m.teamA === teamB && m.teamB === teamA))));
-        matchHistory.push({ group, teamA, teamB, goalsA, goalsB, winner });
-        firebase.database().ref("matchHistory").set(matchHistory);
+      db.ref("matchHistory").once("value").then(snapshot => {
+        matchHistory = snapshot.val() || [];
         renderGroupTables();
         renderMatchList();
-     }
-      };
+      });
+
+      function renderGroupTables() {
+        const tablesDiv = document.getElementById("tables");
+        tablesDiv.innerHTML = "";
+
+        for (let group in groups) {
+          const teams = groups[group];
+          const standings = {};
+          teams.forEach(t => standings[t] = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 });
+
+          matchHistory.filter(m => m.group === group).forEach(({ teamA, teamB, goalsA, goalsB }) => {
+            let a = standings[teamA];
+            let b = standings[teamB];
+            a.played++; b.played++;
+            a.gf += goalsA; a.ga += goalsB;
+            b.gf += goalsB; b.ga += goalsA;
+            a.gd = a.gf - a.ga;
+            b.gd = b.gf - b.ga;
+            if (goalsA > goalsB) { a.won++; b.lost++; a.points += 3; }
+            else if (goalsA < goalsB) { b.won++; a.lost++; b.points += 3; }
+            else { a.drawn++; b.drawn++; a.points++; b.points++; }
+          });
+
+          const sorted = Object.entries(standings).sort((a, b) => b[1].points - a[1].points || b[1].gd - a[1].gd || b[1].gf - a[1].gf);
+          let html = `<h2>Group ${group}</h2><table><tr><th>Team</th><th>MP</th><th>W</th><th>D</th><th>L</th><th>GF</th><th>GA</th><th>GD</th><th>Pts</th></tr>`;
+          sorted.forEach(([team, stat], i) => {
+            let cls = i === 0 ? "top1" : i === 1 ? "top2" : i === 2 ? "third" : "";
+            html += `<tr class='${cls}'><td>${team}</td><td>${stat.played}</td><td>${stat.won}</td><td>${stat.drawn}</td><td>${stat.lost}</td><td>${stat.gf}</td><td>${stat.ga}</td><td>${stat.gd}</td><td>${stat.points}</td></tr>`;
+          });
+          html += `</table>`;
+          tablesDiv.innerHTML += html;
+        }
+      }
+
+      function renderMatchList() {
+        const matchList = document.getElementById("matchList");
+        matchList.innerHTML = "";
+
+        for (let group in allMatchGroups) {
+          const wrapper = document.createElement("div");
+          wrapper.innerHTML = `<h3>Group ${group}</h3>`;
+          const table = document.createElement("table");
+          table.innerHTML = `<tr><th>Match</th><th>Score</th><th>Winner</th><th>Action</th></tr>`;
+
+          allMatchGroups[group].forEach(match => {
+            const existing = matchHistory.find(m => m.group === group && ((m.teamA === match.teamA && m.teamB === match.teamB) || (m.teamA === match.teamB && m.teamB === match.teamA)));
+            const row = document.createElement("tr");
+            const idA = `gA-${group}-${match.teamA}-${match.teamB}`;
+            const idB = `gB-${group}-${match.teamA}-${match.teamB}`;
+            const idW = `w-${group}-${match.teamA}-${match.teamB}`;
+            const submitId = `submit-${group}-${match.teamA}-${match.teamB}`;
+            const actionId = `action-${group}-${match.teamA}-${match.teamB}`;
+
+            if (existing) {
+              row.innerHTML = `
+                <td>${match.teamA} vs ${match.teamB}</td>
+                <td><input id="${idA}" type="number" value="${existing.goalsA}" min="0" readonly> - <input id="${idB}" type="number" value="${existing.goalsB}" min="0" readonly></td>
+                <td>
+                  <select id="${idW}" disabled>
+                    <option value="And" ${existing.winner === 'And' ? 'selected' : ''}>And</option>
+                    <option value="Leo" ${existing.winner === 'Leo' ? 'selected' : ''}>Leo</option>
+                  </select>
+                </td>
+                <td id="${actionId}">
+                  ✔️ <button onclick="enableEdit('${group}', '${match.teamA}', '${match.teamB}')">✏️</button>
+                  <button id="${submitId}" style="display:none" onclick="submitResultFromList('${group}', '${match.teamA}', '${match.teamB}', true)">Submit</button>
+                </td>
+              `;
+            } else {
+              row.innerHTML = `
+                <td>${match.teamA} vs ${match.teamB}</td>
+                <td><input id="${idA}" type="number" min="0"> - <input id="${idB}" type="number" min="0"></td>
+                <td>
+                  <select id="${idW}">
+                    <option value="And">And</option>
+                    <option value="Leo">Leo</option>
+                  </select>
+                </td>
+                <td><button onclick="submitResultFromList('${group}', '${match.teamA}', '${match.teamB}', false)">Submit</button></td>
+              `;
+            }
+            table.appendChild(row);
+          });
+          wrapper.appendChild(table);
+          matchList.appendChild(wrapper);
+        }
+      }
+
+      function enableEdit(group, teamA, teamB) {
+        const idA = `gA-${group}-${teamA}-${teamB}`;
+        const idB = `gB-${group}-${teamA}-${teamB}`;
+        const idW = `w-${group}-${teamA}-${teamB}`;
+        const submitId = `submit-${group}-${teamA}-${teamB}`;
+        const actionId = `action-${group}-${teamA}-${teamB}`;
+
+        document.getElementById(idA).removeAttribute("readonly");
+        document.getElementById(idB).removeAttribute("readonly");
+        document.getElementById(idW).disabled = false;
+        document.getElementById(actionId).innerHTML = `<button id="${submitId}" onclick="submitResultFromList('${group}', '${teamA}', '${teamB}', true)">Submit</button>`;
+      }
+
+      function submitResultFromList(group, teamA, teamB, isEdit) {
+        const idA = `gA-${group}-${teamA}-${teamB}`;
+        const idB = `gB-${group}-${teamA}-${teamB}`;
+        const idW = `w-${group}-${teamA}-${teamB}`;
+        const goalsA = parseInt(document.getElementById(idA).value);
+        const goalsB = parseInt(document.getElementById(idB).value);
+        const winner = document.getElementById(idW).value;
+        if (!isNaN(goalsA) && !isNaN(goalsB)) {
+          matchHistory = matchHistory.filter(m => !(m.group === group && ((m.teamA === teamA && m.teamB === teamB) || (m.teamA === teamB && m.teamB === teamA))));
+          matchHistory.push({ group, teamA, teamB, goalsA, goalsB, winner });
+          db.ref("matchHistory").set(matchHistory);
+          renderGroupTables();
+          renderMatchList();
+        }
+      }
     });
   </script>
 </body>
